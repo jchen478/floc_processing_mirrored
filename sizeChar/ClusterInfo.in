@@ -1,4 +1,0 @@
-0		:cID, the floc to be extracted
-48		:nC, number of flocs in the system
-50 		:floc_cutoff
-2		:maxGap

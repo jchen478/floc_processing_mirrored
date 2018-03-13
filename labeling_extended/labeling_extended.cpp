@@ -95,7 +95,7 @@ int main(){
 	sidez += float(nseg)*rps;
 
 	// array allocation parameters
-	int maxFloc = 10000; // max number of flocs
+	int maxFloc = 20000; // max number of flocs
 	int maxNfib = nfib; // maximum fibers in a floc
 	int maxCon = 300;	// maximum number of contacts with one fiber
 	int maxBin = 5500;	// maximum number of whole fibers in a bin
