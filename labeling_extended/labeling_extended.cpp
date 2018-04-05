@@ -1,6 +1,6 @@
 
-#include "/usr/local/intel/2017/compilers_and_libraries_2017.3.191/linux/mkl/include/mkl.h"
-#include "/usr/local/intel/2017/compilers_and_libraries_2017.3.191/linux/mkl/include/mkl_lapacke.h"
+#include "mkl.h"
+#include "mkl_lapacke.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
