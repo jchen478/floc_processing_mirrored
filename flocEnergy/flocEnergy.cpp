@@ -46,7 +46,7 @@ int main(){
 	q2file = fopen("../../q2.txt", "rb");
 	q3file = fopen("../../q3.txt", "rb");
 
-	int nC, nfibC_ID, nfib, nseg, config_write, *nfibC;
+	int nC, nfibC_ID, nfib, nseg, config_write, *nfibC, *flocLabel;
 	float dt, strain, kb, Eelastic, dum;
 	// nC - number of clusters
 	// nfibC_ID - number of fiber in specified floc
@@ -58,10 +58,11 @@ int main(){
 	fclose(ClusterInfo);
 
 	nfibC = (int*)malloc(nC*sizeof(int));
+	flocLabel = (int*)malloc(nC*sizeof(int));
 	// number of fiber in cluster
 
 	for (i = 0; i < nC; i++){
-		fscanf(Cluster_results, "%d", &idum);
+		fscanf(Cluster_results, "%d", &flocLabel[i]);
 		fscanf(Cluster_results, " %d", &nfibC[i]);
 	}
 
@@ -228,7 +229,7 @@ int main(){
 			R11eq, R12eq, R13eq, R21eq, R22eq,
 			R23eq, R31eq, R32eq, R33eq,
 			kb, nfibC_ID, nseg);
-		fprintf(flocEnergy, "%4d %4d %10.6f\n", cID, nfibC_ID, Eelastic);
+		fprintf(flocEnergy, "%4d %4d %10.6f\n", flocLabel[cID], nfibC_ID, Eelastic);
 		//printf("%4d %4d %10.6f\n", cID, nfibC_ID, Eelastic);
 		fflush(flocEnergy);
 	}
@@ -257,6 +258,7 @@ int main(){
 	free(R32eq);
 	free(R33eq);
 	free(nfibC);
+	free(flocLabel);
 	free(fibID);
 
 	fclose(rxfile); fclose(ryfile); fclose(rzfile);
