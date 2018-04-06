@@ -17,7 +17,7 @@ bool contact(float rxmi, float rymi, float rzmi,
 	float pxnj, float pynj, float pznj,
 	float sidex, float sidey, float sidez,
 	float contact_cutoff, float rep_cutoff, float delta_rx, float rp, int m, int i, int n, int j);
-void checkBins(int m, int nseg, int binInd, int* contactList, int* contactLabel, int *nCon,
+void checkBins(int m, int nseg, int binInd, int* contactingFiber, int* contactingFiberLabel, int *nCon,
 	float *rx, float *ry, float *rz, float *px, float *py, float *pz,
 	float sidex, float sidey, float sidez,
 	float contact_cutoff, float rep_cutoff, float delta_rx, float rp, int *bin, int *binList,
@@ -96,10 +96,11 @@ int main(){
 	sidez += float(nseg)*rps;
 
 	// array allocation parameters
-	int maxFloc = 10000; // max number of flocs
-	int maxNfib = min(nfib,3000); // maximum fibers in a floc
+	int maxFloc = 1000; // max number of flocs
+	int maxNfib = 2*nfib;
+//	int maxNfib = min(nfib,6000); // maximum fibers in a floc
 	int maxCon = 100;	// maximum number of contacts with one fiber
-	int maxBin = 100;	// maximum number of whole fibers in a bin
+	int maxBin = 200;	// maximum number of whole fibers in a bin
 
 	// binning
 	float dx, dy, dz;
@@ -128,10 +129,10 @@ int main(){
 
 	int binInd, xloc, yloc, zloc, ii, xloc2, yloc2, zloc2;
 	int nCon, minLabel, labelInd, oldLabel, iter; 
-	int *contactList, *contactLabel;
+	int *contactingFiber, *contactingFiberLabel;
 	bool newLabel;
-	contactList = (int*)malloc(maxCon*sizeof(int));
-	contactLabel = (int*)malloc(maxCon*sizeof(int));
+	contactingFiber = (int*)malloc(maxCon*sizeof(int));
+	contactingFiberLabel = (int*)malloc(maxCon*sizeof(int));
 
 	// Read in configuration at the last frame //
 	float *rx, *ry, *rz;
@@ -177,7 +178,7 @@ int main(){
 		fibLabel[i] = -1; 
 	}
 	for (i = 0; i < maxFloc; i++){
-		nfibFloc[i] = 0;
+		nfibFloc[i] = -1;
 		for (j = 0; j<maxNfib; j++){
 			flocList[i*maxNfib+j] = -1;
 		}
@@ -185,7 +186,6 @@ int main(){
 
 	binning(nfib,nseg,rcmx,rcmy,rcmz,dx,dy,dz,nx,ny,nz,maxBin,bin,binList,binFib);	 
 
-	labelInd = 0; 
 	// loop through all fibers
 	for (m = 0; m < nfib; m++){
 
@@ -200,7 +200,7 @@ int main(){
 
 		nCon = 0;
 		// check central bin for contact
-		checkBins (m,nseg,binInd,contactList,contactLabel,
+		checkBins (m,nseg,binInd,contactingFiber,contactingFiberLabel,
 			&nCon,rx,ry,rz,px,py,pz,sidex,sidey,sidez,
 			contact_cutoff,rep_cutoff,delta_rx, rps, bin, binList, fibLabel, maxBin);
 
@@ -211,7 +211,7 @@ int main(){
 		zloc2 = zloc; 
 		if (xloc2 != nx){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny; 
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -222,7 +222,7 @@ int main(){
 		zloc2 = zloc;
 		if (yloc2 != ny){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -233,7 +233,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if (zloc2 != nz){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -244,7 +244,7 @@ int main(){
 		zloc2 = zloc;
 		if (xloc2 >= 0){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -255,7 +255,7 @@ int main(){
 		zloc2 = zloc;
 		if (yloc2 >= 0){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -266,7 +266,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if (zloc2 >= 0){ 
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -277,7 +277,7 @@ int main(){
 		zloc2 = zloc;
 		if ((xloc2 != nx) && (yloc2 != ny)){ 
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -288,7 +288,7 @@ int main(){
 		zloc2 = zloc;
 		if ((xloc2 != nx) && (yloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -299,7 +299,7 @@ int main(){
 		zloc2 = zloc;
 		if ((xloc2 >= 0) && (yloc2 != ny)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -310,7 +310,7 @@ int main(){
 		zloc2 = zloc;
 		if ((xloc2 >= 0) && (yloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -321,7 +321,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 != nx) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -332,7 +332,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 >= 0) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -343,7 +343,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 != nx) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -354,7 +354,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 >= 0) && (zloc2 >= 0)){ 
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -365,7 +365,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((yloc2 != ny) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -376,7 +376,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((yloc2 != ny) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -387,7 +387,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((yloc2 >= 0) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -398,7 +398,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((yloc2 >= 0) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -409,7 +409,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 != nx) && (yloc2 != ny) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -420,7 +420,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 != nx) && (yloc2 != ny) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -431,7 +431,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 != nx) && (yloc2 >= 0) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -442,7 +442,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 != nx) && (yloc2 >= 0) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -453,7 +453,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 >= 0) && (yloc2 != ny) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -464,7 +464,7 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 >= 0) && (yloc2 != ny) && (zloc2 >= 0)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -475,7 +475,7 @@ int main(){
 		zloc2 = zloc + 1;
 		if ((xloc2 >= 0) && (yloc2 >= 0) && (zloc2 != nz)){
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
@@ -486,29 +486,40 @@ int main(){
 		zloc2 = zloc - 1;
 		if ((xloc2 >= 0) && (yloc2 >= 0) && (zloc2 >= 0)){ 
 			binInd = xloc2 + yloc2*nx + zloc2*nx*ny;
-			checkBins(m, nseg, binInd, contactList, contactLabel,
+			checkBins(m, nseg, binInd, contactingFiber, contactingFiberLabel,
 				&nCon, rx, ry, rz, px, py, pz, sidex, sidey, sidez,
 				contact_cutoff, rep_cutoff, delta_rx, rps, bin, binList, fibLabel, maxBin);
 		}
 
 		//////////////// Labeling //////////////
-		minLabel = labelInd; 
 		newLabel = true;
 		// when the fiber has contacts
 		if (nCon != 0){
 			// find the smallest label within the group of contacting fibers
+			minLabel = maxFloc;
 			for (i = 0; i < nCon; i++){
+				// when at least one fiber is labeled, 
 				// don't need new label
-				if (contactLabel[i] > -1){
-					if (contactLabel[i] < minLabel){
-						minLabel = contactLabel[i];
+				if (contactingFiberLabel[i] > -1){
+					if (contactingFiberLabel[i] < minLabel){
+						minLabel = contactingFiberLabel[i];
 					}
 					newLabel = false;
 				}
 			}
 			if (newLabel){
+				// need a new label, reuse one that emptied due to list combinations
+				labelInd = maxFloc;
+				for (i=0; i<maxFloc; i++) {
+					if (nfibFloc[i] == -1){
+						nfibFloc[i] = 0; 
+						labelInd = i; 
+						break;
+					}
+				}
 				minLabel = labelInd;
-				labelInd++;
+				//cout << "labelInd " << labelInd << endl;
+				//labelInd++;
 				if (minLabel >= maxFloc){
 					 printf("allocate more space for storing flocs, i.e. maxFloc\n");
 					 return 1;
@@ -542,7 +553,7 @@ int main(){
 			}
 			fibLabel[m] = minLabel;
 			for (i = 0; i < nCon; i++){
-				n = contactList[i];
+				n = contactingFiber[i];
 				oldLabel = fibLabel[n];
 				// add a new fiber to group
 				if (oldLabel == -1){
@@ -569,8 +580,20 @@ int main(){
 					}
 				}
 				fibLabel[n] = minLabel;
-			}		
+			}
+			/*for (i=0; i< maxFloc; i++){
+				if (nfibFloc[i] == -1) continue;
+				cout << i << "  : ";
+				for (j=0; j<nfibFloc[i]; j++){
+					cout << flocList[i*maxNfib+j]  << "  "; 
+				}
+				cout << endl;
+			}*/	
 		}		
+	}
+
+	for (i=0; i<maxFloc; i++){
+		cout << "nfibFloc[" << i << "] = " << nfibFloc[i] << endl;
 	}
 
 	// the largest floc
@@ -704,8 +727,8 @@ int main(){
 	free(bin); free(binList); free(binFib);  
 	free(nfibFloc); free(flocList); 
 	free(fibLabel); 	
-	free(contactList); 
-	free(contactLabel); 
+	free(contactingFiber); 
+	free(contactingFiberLabel); 
 
 	fclose(Parameters); 
 	fclose(center_mass); 
@@ -809,7 +832,7 @@ void gyration(float *flocRcmx, float *flocRcmy, float *flocRcmz,
 	*Ryz /= float(flocCount*nseg);
 }
 
-void checkBins(int m, int nseg, int binInd, int* contactList, int* contactLabel, int *nCon,
+void checkBins(int m, int nseg, int binInd, int* contactingFiber, int* contactingFiberLabel, int *nCon,
 	float *rx, float *ry, float *rz, float *px, float *py, float *pz,
 	float sidex, float sidey, float sidez,
 	float contact_cutoff, float rep_cutoff, float delta_rx,
@@ -819,14 +842,14 @@ void checkBins(int m, int nseg, int binInd, int* contactList, int* contactLabel,
 	int nof, b, n, mi, nj, i, j; 
 	bool isContact, repeat;
 
-	// determine contacts wihtin central bin
+	// determine contacts with bin binInd
 	nof = bin[binInd];
 	for (b = 0; b < nof; b++){
 		n = binList[binInd*maxBin + b];
 		isContact = false;
 		repeat = false; 
 		for (i = 0; i < *nCon; i++){
-			if (n == contactList[i]){
+			if (n == contactingFiber[i]){
 				repeat = true; 
 			}
 		}
@@ -850,8 +873,8 @@ void checkBins(int m, int nseg, int binInd, int* contactList, int* contactLabel,
 			}
 			if (isContact){
 				// save to list of contacting fibers with m
-				contactList[*nCon] = n;
-				contactLabel[*nCon] = fibLabel[n];
+				contactingFiber[*nCon] = n;
+				contactingFiberLabel[*nCon] = fibLabel[n];
 				*nCon = *nCon + 1;
 			}
 		}
