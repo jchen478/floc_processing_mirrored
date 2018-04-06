@@ -2,6 +2,7 @@
 #include "mkl.h"
 #include "mkl_lapacke.h"
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <math.h>
 
@@ -95,10 +96,10 @@ int main(){
 	sidez += float(nseg)*rps;
 
 	// array allocation parameters
-	int maxFloc = 20000; // max number of flocs
-	int maxNfib = nfib; // maximum fibers in a floc
-	int maxCon = 300;	// maximum number of contacts with one fiber
-	int maxBin = 5500;	// maximum number of whole fibers in a bin
+	int maxFloc = 10000; // max number of flocs
+	int maxNfib = min(nfib,3000); // maximum fibers in a floc
+	int maxCon = 100;	// maximum number of contacts with one fiber
+	int maxBin = 100;	// maximum number of whole fibers in a bin
 
 	// binning
 	float dx, dy, dz;
@@ -508,7 +509,10 @@ int main(){
 			if (newLabel){
 				minLabel = labelInd;
 				labelInd++;
-				if (minLabel >= maxFloc) printf("allocate more space for storing flocs, i.e. maxFloc\n"); 
+				if (minLabel >= maxFloc){
+					 printf("allocate more space for storing flocs, i.e. maxFloc\n");
+					 return 1;
+				} 
 			}
 			// label all fibers in group
 			// add fibers to list of fibers in a floc
@@ -516,6 +520,10 @@ int main(){
 			if (oldLabel == -1){
 				flocList[minLabel*maxNfib + nfibFloc[minLabel]] = m;
 				nfibFloc[minLabel]++;
+				if (nfibFloc[minLabel] >= maxNfib){
+					 printf("increase maxNfib \n"); 
+					 return 1;
+				}
 			}
 			// combine to new group
 			else if (oldLabel != minLabel && nfibFloc[oldLabel] > 0){
@@ -525,6 +533,10 @@ int main(){
 						flocList[oldLabel*maxNfib + ii];
 					fibLabel[flocList[oldLabel*maxNfib + ii]] = minLabel;
 					nfibFloc[minLabel]++;
+					if (nfibFloc[minLabel] >= maxNfib){
+						printf("increase maxNfib \n"); 
+					 	return 1;
+					}
 					nfibFloc[oldLabel] = -1; 
 				}
 			}
@@ -536,6 +548,10 @@ int main(){
 				if (oldLabel == -1){
 					flocList[minLabel*maxNfib + nfibFloc[minLabel]] = n;
 					nfibFloc[minLabel]++;
+					if (nfibFloc[minLabel] >= maxNfib){
+						printf("increase maxNfib \n"); 
+					 	return 1;
+					}
 				}
 				// combine to new group
 				else if (oldLabel != minLabel && nfibFloc[oldLabel] > 0){
@@ -545,6 +561,10 @@ int main(){
 							flocList[oldLabel*maxNfib + ii];
 						fibLabel[flocList[oldLabel*maxNfib + ii]] = minLabel;
 						nfibFloc[minLabel]++;
+						if (nfibFloc[minLabel] >= maxNfib){
+							printf("increase maxNfib \n"); 
+					 		return 1;
+						}
 						nfibFloc[oldLabel] = -1;
 					}
 				}
